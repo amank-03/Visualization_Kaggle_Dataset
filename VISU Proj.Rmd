@@ -1,0 +1,1207 @@
+---
+title: "Who eats the food we grow?"
+author: "Aman Kumar | MDS202104"
+date: ""
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Abstract 
+
+The project aims to find solution for feeding the growing population of the world. The world population is expected to grow from 7.3 billion today to 9.7 billion in the year 2050 and one of the greatest challenge for food and agriculture organisations is to feed such a huge population.
+
+These solutions range from changing the way we grow our food to changing the way we eat. To make things harder, the world's climate is changing and it is both affecting and affected by the way we grow our food – agriculture.
+
+For instance, Cow is well know methane gas giant. Methane, the $2^{nd}$ most warming gas after $CO_2$, and a particularly potent greenhouse gas contributing to global warming. As per CBS news article on "How much methane cows releases when burping and passing gas" released on Oct 20, 2021, cows are responsible for about 40% of global methane emission which is passed or belched by the world's 1.4 billion cattle. However, the bovine meat(beef) is a major red meat source around the glove. As per the data since 1961 to 2013 an average of 44,408,870 tonnes of beef is consumed each year around the globe. Considering  average weight of a cow as 1000 kilograms leads us to production and slaughtering of 44,408,870 livestock per year. 
+
+This dataset was meticulously gathered, organized and published by the Food and Agriculture Organization of the United Nations. This chunk of the dataset is focused on two utilization of each food item available:
+
+Food - refers to the total amount of the food item available as human food
+Feed - refers to the quantity of the food item available for feeding to the livestock and poultry
+during the reference period.
+
+
+# Variable Description 
+```{r}
+Variable = c("Area Abbreviation" , "Area Code" , "Area" , "Item Code" ,
+             "Item" , "Element code" , "Element" , "Unit" , "Latitude" , "Longitude",
+             "Year" , "Amount")
+
+Type_of_variable = c("Nominal" , "Nominal" , "Nominal" , "Nominal" , "Nominal",
+                     "Nominal" , "Nominal" , "Nominal" , "Continuous", "Continuous", 
+                     "Ordinal" , "Count")
+
+Description = c("Abbreviation for country name",
+                "Unique code for each country" , 
+                "Name of the Country" , 
+                " Food item code" , 
+                "Food Item"," Food or Feed code", "Food or Feed",
+                "Unit of Measurement" , 
+                "Latitude", "Longitude", "Year since 1961 to 2013" ,
+                "Amount of Food or Feed for each year")
+
+df = data.frame(Variable, Type_of_variable ,Description )
+library(knitr)
+knitr::kable(df,
+             caption = "Variable Description")
+```
+
+
+## Reading the data
+
+```{r}
+data = read.csv("C:\\Users\\AMAN-PC\\Documents\\VISU Project\\FAO.csv", header = T)
+```
+
+Let's try to know which are the most popular food across the globe, we will extract 20 most popularfood items.
+
+```{r}
+head(sort(table(data$Item), rev(T)), 10)
+```
+Now let's observe the least popular too
+
+```{r}
+tail(sort(table(data$Item), rev(T)), 10)
+```
+
+# Items under consideration
+As a part of study I will consider 4 out of top 10 most popular food items across the globe.
+
+- Milk Excluding Butter
+- Eggs
+- Fish, Seafood
+- Animal Fat
+
+In addition, I will also study
+
+- Bovine meat
+- Pig meat
+- Poultry Meat
+- Goat Meat
+
+## Milk, Excluding Butter
+
+```{r}
+milk = data[data$Item == "Milk - Excluding Butter" & data$Item.Code == "2848", ]
+
+
+```
+
+We can observe from the dataset that for country there are 4 entries for milk, 2 for food and 2 for feed. Further entries are also similar. So we will consider only one out of the two Milk data. 
+Choosing $2848$ Item.code and year 2013
+
+```{r}
+milk_2013_food = data[data$Item.Code == "2848" & data$Element=="Food" , 
+                      c(1, 7, 63) ]
+
+milk_2013_feed = data[data$Item.Code == "2848" & data$Element=="Feed" , 
+                      c(1, 7, 63) ]
+
+```
+
+### Top 20 consumer  
+
+```{r}
+top_consumer_milk_food = head(milk_2013_food[order(milk_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+top_consumer_milk_feed = head(milk_2013_feed[order(milk_2013_feed$Y2013, 
+                                                   decreasing = T), ],20)
+```
+
+### Plotting top 20 milk consumer in the world 
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_milk_food, 
+       aes(x = reorder(top_consumer_milk_food[,1], -top_consumer_milk_food[,3]),
+           (top_consumer_milk_food[,3]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Milk Consumer around the world")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+
+```
+
+### Plotting top 20 milk feeding country around the world 
+
+```{r}
+ggplot(data = top_consumer_milk_feed, 
+       aes(x = reorder(top_consumer_milk_feed[,1], -top_consumer_milk_feed[,3]),
+           (top_consumer_milk_feed[,3]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "Skyblue") +
+  ggtitle("Top 20 Milk Feeder around the world")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+
+```
+
+From the above plots we can conclude that India is the major consumer and feeder of milk
+
+Let's try to find the trend of milk consumption for top 5 contributes, namely, India, USA, China, Pakistan and Brazil, from year 1961 to 2013
+
+```{r}
+year = seq(1961, 2013 , 1)
+milk_food_IND = milk[milk$Area.Abbreviation == "IND" 
+                     & milk$Element == "Food" , c(11:63) ]
+milk_food_PAK = milk[milk$Area.Abbreviation == "PAK" 
+                     & milk$Element == "Food" , c(11:63) ]
+milk_food_USA = milk[milk$Area.Abbreviation == "USA" 
+                     & milk$Element == "Food" , c(11:63) ]
+milk_food_CHN = milk[milk$Area.Abbreviation == "CHN" 
+                     & milk$Element == "Food" & milk$Area.Code == 41 ,c(11:63) ]
+milk_food_BRA = milk[milk$Area.Abbreviation == "BRA" 
+                     & milk$Element == "Food" , c(11:63) ]
+
+plot(year, milk_food_IND, type = "l" , col = "Red", 
+     xlab = "Year" , main = "Milk consumption trend: Top 5 consumers",
+     ylab = "Amount (1000 tonnes)", ylim = c(0, 120000))
+lines(year, milk_food_PAK, col = "Green")
+lines(year, milk_food_USA, col = "Blue")
+lines(year, milk_food_CHN, col = "Yellow")
+lines(year, milk_food_BRA, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("IND", "PAK", "USA","CHN", "BRA"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+
+```
+
+From the above plot it's clear that 
+- Milk consumption has been increasing in all the top 5 countries
+- India has surpassed USA in milk consumption in 2005 and since then India is highest milk consumer
+- There is huge growth in milk consumption in China 
+
+
+## Eggs
+
+### Data Extraction
+```{r}
+eggs = data[data$Item == "Eggs" & data$Item.Code == "2744", ]
+
+eggs_2013_food = eggs[eggs$Element == "Food", c(1, 63)]
+
+eggs_2013_feed = eggs[eggs$Element == "Feed", c(1, 63)]
+
+```
+
+Let's first explore the consumption of eggs in year 2013 for the top 20 countries
+
+```{r}
+top_consumer_eggs_food = head(eggs_2013_food[order(eggs_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+top_consumer_eggs_feed = head(eggs_2013_feed[order(eggs_2013_feed$Y2013, 
+                                                   decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Egg consumer
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_eggs_food, 
+       aes(x = reorder(top_consumer_eggs_food[,1], -top_consumer_eggs_food[,2]),
+           (top_consumer_eggs_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Egg Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+### Top 20 Egg feeding Country
+
+```{r}
+ggplot(data = top_consumer_eggs_feed, 
+       aes(x = reorder(top_consumer_eggs_feed[,1], -top_consumer_eggs_feed[,2]),
+           (top_consumer_eggs_feed[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "Skyblue") +
+  ggtitle("Top 20 Egg Feeder")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+
+From the above plots we can conclude that China is the major consumer of eggs and there are only 6 countries in the world which feeds egg to animals
+
+Now let's try to find the trend of egg consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+egg_food_IND = eggs[eggs$Area.Abbreviation == "IND" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_JPN = eggs[eggs$Area.Abbreviation == "JPN" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_USA = eggs[eggs$Area.Abbreviation == "USA" & eggs$Element == "Food" , 
+                    c(11:63) ]
+egg_food_CHN = eggs[eggs$Area.Abbreviation == "CHN" & eggs$Element == "Food" 
+                    & eggs$Area.Code == 41 , c(11:63) ]
+egg_food_MEX = eggs[eggs$Area.Abbreviation == "MEX" & eggs$Element == "Food" , 
+                    c(11:63) ]
+
+plot(year, egg_food_CHN, type = "l" , col = "Red" , 
+     main = "Egg consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" , ylim = c(0, 28000) )
+lines(year, egg_food_JPN, col = "Green")
+lines(year, egg_food_USA, col = "Blue")
+lines(year, egg_food_IND, col = "Yellow")
+lines(year, egg_food_MEX, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "JPN", "USA","IND", "MEX"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+
+Form the above plot we can say
+- Consumption of Egg in China increased abruptly and intensely after 1980
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+## Fish and Seafood
+
+### Data Extraction 
+```{r}
+Fish_Seafood= data[data$Item == "Fish, Seafood" & data$Item.Code == "2960", ]
+
+Fish_Seafood_2013_food = Fish_Seafood[Fish_Seafood$Element == "Food", c(1, 63)]
+
+Fish_Seafood_2013_feed = Fish_Seafood[Fish_Seafood$Element == "Feed", c(1, 63)]
+```
+
+We will again observe the data of top 20 countries
+
+```{r}
+top_consumer_Fish_Seafood_food = head(Fish_Seafood_2013_food[order(Fish_Seafood_2013_food$Y2013, decreasing = T), ],20)
+top_consumer_Fish_Seafood_feed = head(Fish_Seafood_2013_feed[order(Fish_Seafood_2013_feed$Y2013, decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Fish and Seafood consumer
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Fish_Seafood_food, 
+       aes(x = reorder(top_consumer_Fish_Seafood_food[,1], -top_consumer_Fish_Seafood_food[,2]),
+           (top_consumer_Fish_Seafood_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Fish and Seafood Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+## Top 20 Fish and Seafood feeding country 
+```{r}
+ggplot(data = top_consumer_Fish_Seafood_feed, 
+       aes(x = reorder(top_consumer_Fish_Seafood_feed[,1], -top_consumer_Fish_Seafood_feed[,2]),
+           (top_consumer_Fish_Seafood_feed[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "Skyblue") +
+  ggtitle("Top 20 Fish and Seafood Feeder")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+From the above plots we can conclude that China is the major consumer as well as feeder of Fish as well 
+
+Now let's try to find the trend of Fish and seafood consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Fish_Seafood_food_IND = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "IND" & 
+                                       Fish_Seafood$Element == "Food" , c(11:63) ]
+Fish_Seafood_food_IDN = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "IDN" & 
+                                       Fish_Seafood$Element == "Food" , c(11:63) ]
+Fish_Seafood_food_USA = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "USA" & 
+                                       Fish_Seafood$Element == "Food" , c(11:63) ]
+Fish_Seafood_food_CHN = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "CHN" & 
+                                       Fish_Seafood$Element == "Food" & 
+                                       Fish_Seafood$Area.Code == 41 , c(11:63) ]
+Fish_Seafood_food_RUS = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "RUS" & 
+                                       Fish_Seafood$Element == "Food" , c(11:63) ]
+
+plot(year, Fish_Seafood_food_CHN, type = "l" , 
+     col = "Red",
+     main = "Fish and Seafood consumption trend: Top 5 country", xlab = "Year",  
+     ylab = "Amount (1000 tonnes)" )
+lines(year, Fish_Seafood_food_IDN, col = "Green")
+lines(year, Fish_Seafood_food_USA, col = "Blue")
+lines(year, Fish_Seafood_food_IND, col = "Yellow")
+lines(year, Fish_Seafood_food_RUS, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "IDN", "USA","IND", "RUS"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Fish in China also has the same pattern as egg. It is also steep increase after 1980
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+## Animal Fat
+### Data Extraction
+```{r}
+
+ 
+
+Animal_Fat = data[data$Item == "Animal fats" & data$Item.Code == "2946", ]
+
+Animal_Fat_2013_food = Animal_Fat[Animal_Fat$Element == "Food", c(1, 63)]
+
+Animal_Fat_2013_feed = Animal_Fat[Animal_Fat$Element == "Feed", c(1, 63)]
+
+```
+
+We will again observe the data of top 20 countries
+
+```{r}
+top_consumer_Animal_Fat_food = head(Animal_Fat_2013_food
+                                    [order(Animal_Fat_2013_food$Y2013, 
+                                           decreasing = T), ],20)
+top_consumer_Animal_Fat_feed = head(Animal_Fat_2013_feed
+                                    [order(Animal_Fat_2013_feed$Y2013, 
+                                           decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Animal Fat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Animal_Fat_food, 
+       aes(x = reorder(top_consumer_Animal_Fat_food[,1],
+                       -top_consumer_Animal_Fat_food[,2]),
+           (top_consumer_Animal_Fat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Animal Fat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+### Top 20 Animal Fat feeder in the world
+
+```{r}
+ggplot(data = top_consumer_Animal_Fat_feed, 
+       aes(x = reorder(top_consumer_Animal_Fat_feed[,1], -top_consumer_Animal_Fat_feed[,2]),
+           (top_consumer_Animal_Fat_feed[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "Skyblue") +
+  ggtitle("Top 20 Animal Fat Feeder")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+From the above plots we can conclude that India is the major consumer and USA is top on feeding animal fats to animals  of 
+
+Now let's try to find the trend of animal fat consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Animal_Fat_food_IND = Animal_Fat[Animal_Fat$Area.Abbreviation == "IND" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_DEU = Animal_Fat[Animal_Fat$Area.Abbreviation == "DEU" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_USA = Animal_Fat[Animal_Fat$Area.Abbreviation == "USA" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+Animal_Fat_food_CHN = Animal_Fat[Animal_Fat$Area.Abbreviation == "CHN" & 
+                                   Animal_Fat$Element == "Food" &
+                                   Animal_Fat$Area.Code == 41 , c(11:63) ]
+Animal_Fat_food_RUS = Animal_Fat[Animal_Fat$Area.Abbreviation == "RUS" & 
+                                   Animal_Fat$Element == "Food" , c(11:63) ]
+
+plot(year, Animal_Fat_food_IND, type = "l" , col = "Red" , 
+     main = "Animal Fat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" )
+lines(year, Animal_Fat_food_DEU, col = "Green" )
+lines(year, Animal_Fat_food_USA, col = "Blue" )
+lines(year, Animal_Fat_food_CHN, col = "Yellow")
+lines(year, Animal_Fat_food_RUS, col = "Pink" )
+
+legend(x = "topleft",
+  legend = c("IND", "DEU", "USA","CHN", "RUS"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+
+## Bovine meat
+
+### Data Extraction
+```{r}
+
+Bovine_Meat = data[data$Item == "Bovine Meat" & data$Item.Code == "2731", ]
+
+Bovine_Meat_2013_food = Bovine_Meat[Bovine_Meat$Element == "Food", c(1, 63)]
+
+Bovine_Meat_2013_feed = Bovine_Meat[Bovine_Meat$Element == "Feed", c(1, 63)]
+```
+
+We will again observe the data of top 20 countries
+```{r}
+top_consumer_Bovine_Meat_food = head(Bovine_Meat_2013_food
+                                     [order(Bovine_Meat_2013_food$Y2013, 
+                                            decreasing = T), ],20)
+top_consumer_Bovine_Meat_feed = head(Bovine_Meat_2013_feed
+                                     [order(Bovine_Meat_2013_feed$Y2013, 
+                                            decreasing = T), ],20)
+```
+
+### Plotting top 20 Bovine Meat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Bovine_Meat_food, 
+       aes(x = reorder(top_consumer_Bovine_Meat_food[,1], -top_consumer_Bovine_Meat_food[,2]),
+           (top_consumer_Bovine_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Bovine Meat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+```{r}
+dim(Bovine_Meat_2013_feed)
+```
+Since, there are only 3 countries who feed beef to animal, I am not plotting its feeding data
+
+From the above plots we can conclude that USA is the major consumer of Bovine_Meat 
+
+Now let's try to find the trend of egg consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Bovine_Meat_food_BRA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "BRA" 
+                                   & Bovine_Meat$Element == "Food" , c(11:63) ]
+Bovine_Meat_food_RUS = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "RUS" 
+                                   & Bovine_Meat$Element == "Food" , c(11:63) ]
+Bovine_Meat_food_USA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "USA" 
+                                   & Bovine_Meat$Element == "Food" , c(11:63) ]
+Bovine_Meat_food_CHN = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "CHN" 
+                                   & Bovine_Meat$Element == "Food" 
+                                   & Bovine_Meat$Area.Code == 41 , c(11:63) ]
+Bovine_Meat_food_ARG = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "ARG" 
+                                   & Bovine_Meat$Element == "Food" , c(11:63) ]
+plot(year, Bovine_Meat_food_USA, type = "l" , 
+     col = "Red", 
+     main = "Bovine Meat consumption trend: Top 5 country",  xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" , ylim = c(0,20000) )
+lines(year, Bovine_Meat_food_BRA, col = "Green")
+lines(year, Bovine_Meat_food_CHN, col = "Blue")
+lines(year, Bovine_Meat_food_RUS, col = "Yellow")
+lines(year, Bovine_Meat_food_ARG, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("USA", "BRA", "CHN","RUS", "ARG"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+
+```
+
+## Pig Meat 
+
+### Data Extraction
+```{r}
+
+Pig_Meat = data[data$Item == "Pigmeat" & data$Item.Code == "2733", ]
+
+Pig_Meat_2013_food = Pig_Meat[Pig_Meat$Element == "Food", c(1, 63)]
+
+Pig_Meat_2013_feed = Pig_Meat[Pig_Meat$Element == "Feed", c(1, 63)]
+```
+
+### Top 20 countries
+
+```{r}
+top_consumer_Pig_Meat_food = head(Pig_Meat_2013_food
+                                  [order(Pig_Meat_2013_food$Y2013, decreasing = T), ],20)
+top_consumer_Pig_Meat_feed = head(Pig_Meat_2013_feed
+                                  [order(Pig_Meat_2013_feed$Y2013, decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Pigmeat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Pig_Meat_food, 
+       aes(x = reorder(top_consumer_Pig_Meat_food[,1], -top_consumer_Pig_Meat_food[,2]),
+           (top_consumer_Pig_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Pigmeat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+
+```{r}
+dim(top_consumer_Pig_Meat_feed)
+```
+So,there are no country who feed pig meat. Now we will move on to find the trend of egg consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Pig_Meat_food_RUS = Pig_Meat[Pig_Meat$Area.Abbreviation == "RUS" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_VNM = Pig_Meat[Pig_Meat$Area.Abbreviation == "VNM" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_USA = Pig_Meat[Pig_Meat$Area.Abbreviation == "USA" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+Pig_Meat_food_CHN = Pig_Meat[Pig_Meat$Area.Abbreviation == "CHN"
+                             & Pig_Meat$Element == "Food" 
+                             & Pig_Meat$Area.Code == 41 , c(11:63) ]
+Pig_Meat_food_DEU = Pig_Meat[Pig_Meat$Area.Abbreviation == "DEU" 
+                             & Pig_Meat$Element == "Food" , c(11:63) ]
+plot(year, Pig_Meat_food_CHN, type = "l" , 
+     col = "Red",  
+     main ="Pig Meat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)", ylim = c(0, 55000))
+lines(year, Pig_Meat_food_DEU, col = "Green")
+lines(year, Pig_Meat_food_USA, col = "Blue")
+lines(year, Pig_Meat_food_RUS, col = "Yellow")
+lines(year, Pig_Meat_food_VNM, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "DEU", "USA","RUS", "VNM"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Pig_Meat in China has the same pattern eggs, fish and beef
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+## Poultry Meat
+
+### Extracting Data
+```{r}
+
+
+Poultry_Meat = data[data$Item == "Poultry Meat" & data$Item.Code == "2734", ]
+
+Poultry_Meat_2013_food = Poultry_Meat[Poultry_Meat$Element == "Food", c(1, 63)]
+
+Poultry_Meat_2013_feed = Poultry_Meat[Poultry_Meat$Element == "Feed", c(1, 63)]
+```
+
+### Top 20 country
+
+```{r}
+top_consumer_Poultry_Meat_food = head(Poultry_Meat_2013_food
+                                      [order(Poultry_Meat_2013_food$Y2013, decreasing = T), ],20)
+top_consumer_Poultry_Meat_feed = head(Poultry_Meat_2013_feed
+                                      [order(Poultry_Meat_2013_feed$Y2013, decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Poultry_Meat consumer 
+
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Poultry_Meat_food, 
+       aes(x = reorder(top_consumer_Poultry_Meat_food[,1], -top_consumer_Poultry_Meat_food[,2]),
+           (top_consumer_Poultry_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Poultry Meat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+Like Pig meat Poultry meat is also not fed to animals. 
+
+Now lets try to find the trend of Poultry Meat consumption for top 5 countries, from year 1961 to 2013
+
+
+
+```{r}
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+Poultry_Meat_food_CHN = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "CHN" 
+                                     & Poultry_Meat$Element == "Food" 
+                                     & Poultry_Meat$Area.Code == 41 , c(11:63) ]
+Poultry_Meat_food_MEX = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "MEX" 
+                                     & Poultry_Meat$Element == "Food" , c(11:63) ]
+plot(year, Poultry_Meat_food_CHN, type = "l" , col = "Red", lwd = 2 , 
+     main = "Poultry Meat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" )
+lines(year, Poultry_Meat_food_RUS, col = "Green")
+lines(year, Poultry_Meat_food_USA, col = "Blue")
+lines(year, Poultry_Meat_food_BRA, col = "Yellow")
+lines(year, Poultry_Meat_food_MEX, col = "Pink")
+
+legend(x = "topleft",
+  legend = c("CHN", "RUS", "USA","BRA", "MEX"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Poultry Meat in China has the same pattern eggs, fish and beef and pig meat
+- Interestingly USA is also showing rapid growth in poultry meat consumption, seemingly more than it population growth rate
+
+## Mutton & Goat Meat
+
+### Extracting Data
+```{r}
+
+Goat_Meat = data[data$Item == "Mutton & Goat Meat" & data$Item.Code == "2732", ]
+
+Goat_Meat_2013_food = Goat_Meat[Goat_Meat$Element == "Food", 
+                                                    c(1, 63)]
+
+Goat_Meat_2013_feed = Goat_Meat[Goat_Meat$Element == "Feed", 
+                                                    c(1, 63)]
+
+```
+
+### Top 20 Counrty
+```{r}
+top_consumer_Goat_Meat_food =head(Goat_Meat_2013_food
+                                            [order(Goat_Meat_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+top_consumer_Goat_Meat_feed = head(Goat_Meat_2013_feed
+                                             [order(Goat_Meat_2013_feed$Y2013, 
+                                                    decreasing = T), ],20)
+
+```
+
+### Plotting top 20 Goat_Meat consumer around the world 
+```{r}
+library(ggplot2)
+ggplot(data = top_consumer_Goat_Meat_food, 
+       aes(x = reorder(top_consumer_Goat_Meat_food[,1], -top_consumer_Goat_Meat_food[,2]),
+           (top_consumer_Goat_Meat_food[,2]))) + 
+  geom_bar(stat = "identity" , orientation = T, fill = "skyblue") +  
+  ggtitle("Top 20 Goat Meat Consumers ")+
+  labs(y = "Amount (1000 tonnes)" , x = "Country")
+```
+Now lets try to find the trend of Goat_Meat consumption for top 5 countries, from year 1961 to 2013
+
+```{r}
+Goat_Meat_food_IND = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "IND" 
+                                                   & Goat_Meat$Element == "Food" ,
+                                                   c(11:63) ]
+Goat_Meat_food_NGA = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "NGA" 
+                                                   & Goat_Meat$Element == "Food" ,
+                                                   c(11:63) ]
+Goat_Meat_food_PAK = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "PAK" 
+                                                   & Goat_Meat$Element == "Food" ,
+                                                   c(11:63) ]
+Goat_Meat_food_CHN = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "CHN" 
+                                                   & Goat_Meat$Element == "Food" 
+                                                   & Goat_Meat$Area.Code == 41 , 
+                                                   c(11:63) ]
+Goat_Meat_food_SDN = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "SDN" 
+                                                   & Goat_Meat$Element == "Food" ,
+                                                   c(11:63) ]
+
+plot(year, Goat_Meat_food_CHN, 
+     type = "l" , col = "Red", 
+     main = "Goat Meat consumption trend: Top 5 country", xlab = "Year" ,  
+     ylab = "Amount (1000 tonnes)" )
+
+lines(year, Goat_Meat_food_IND, col = "Green")
+lines(year, Goat_Meat_food_SDN, col = "Blue")
+lines(year, Goat_Meat_food_PAK, col = "Yellow")
+lines(year, Goat_Meat_food_NGA, col = "Pink")
+
+
+legend(x = "topleft",
+  legend = c("CHN", "IND", "SDN","PAK", "NGA"),
+  fill = c("red", "Green","blue", "Yellow", "pink")
+   )
+```
+Form the above plot we can say
+- Consumption of Goat_Meat in China increased abruptly and intensely
+- In all other country in-spite of increase in population increased is consumption is not significant
+
+
+Here's the summary of top 5 consumers of each food item
+
+```{r}
+t5_milk = head(top_consumer_milk_food[,1],5)
+t5_egg = head(top_consumer_eggs_food[,1],5)
+t5_fish_seafood = head(top_consumer_Fish_Seafood_food[,1],5)
+t5_animal_fat = head(top_consumer_Animal_Fat_food[,1],5)
+t5_bovine_meat = head(top_consumer_Bovine_Meat_food[,1],5)
+t5_pig_meat = head(top_consumer_Pig_Meat_food[,1],5)
+t5_poultry_meat = head(top_consumer_Poultry_Meat_food[,1],5)
+t5_goat_meat = head(top_consumer_Goat_Meat_food[,1],5)
+
+top_5_consumer = t(data.frame(MILK =t5_milk, 
+                             EGG = (t5_egg), 
+                             FISH = (t5_fish_seafood),
+                         ANIMAL_FAT = (t5_animal_fat), 
+                        BOVINE_MEAT = (t5_bovine_meat),
+                        PIG_MEAT = (t5_pig_meat), 
+                        POULTRY_MEAT = (t5_poultry_meat),
+                        GOAT_MAET =  (t5_goat_meat)))
+
+colnames(top_5_consumer) = c("1st", "2nd", "3rd", "4th", "5th") 
+
+
+top_5_consumer
+
+```
+
+
+From the above table it's clear that China, India, USA, Brazil and Russia dominate food market of these 8 items. 
+
+Let's try to find the yearly trend of these 8 item in these country
+
+## China 
+
+
+```{r}
+
+milk_food_CHN = milk[milk$Area.Abbreviation == "CHN" 
+                     & milk$Element == "Food" & milk$Area.Code == 41 ,c(11:63) ]
+egg_food_CHN = eggs[eggs$Area.Abbreviation == "CHN" & eggs$Element == "Food" 
+                    & eggs$Area.Code == 41 , c(11:63) ]
+Fish_Seafood_food_CHN = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "CHN" & 
+                                       Fish_Seafood$Element == "Food" & 
+                                       Fish_Seafood$Area.Code == 41 , c(11:63) ]
+Animal_Fat_food_CHN = Animal_Fat[Animal_Fat$Area.Abbreviation == "CHN" & 
+                                   Animal_Fat$Element == "Food" &
+                                   Animal_Fat$Area.Code == 41 , c(11:63) ]
+Bovine_Meat_food_CHN = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "CHN" 
+                                   & Bovine_Meat$Element == "Food" 
+                                   & Bovine_Meat$Area.Code == 41 , c(11:63) ]
+Pig_Meat_food_CHN = Pig_Meat[Pig_Meat$Area.Abbreviation == "CHN"
+                             & Pig_Meat$Element == "Food" 
+                             & Pig_Meat$Area.Code == 41 , c(11:63) ]
+Poultry_Meat_food_CHN = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "CHN" 
+                                     & Poultry_Meat$Element == "Food" 
+                                     & Poultry_Meat$Area.Code == 41 , c(11:63) ]
+Poultry_Meat_food_CHN = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "CHN" 
+                                     & Poultry_Meat$Element == "Food" 
+                                     & Poultry_Meat$Area.Code == 41 , c(11:63) ]
+Goat_Meat_food_CHN = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "CHN" 
+                                                   & Goat_Meat$Element == "Food" 
+                                                   & Goat_Meat$Area.Code == 41 , 
+                                                   c(11:63) ]
+
+plot(year, milk_food_CHN, typ = "l" , col="coral", 
+     main = "Food consumption trend: China",
+     xlab = "Year", ylab = "Amount(1000 tonnes)", ylim = c(0, 65000))
+lines(year, egg_food_CHN, col = "skyblue")
+lines(year, Fish_Seafood_food_CHN, col = "aquamarine4" )
+lines(year, Animal_Fat_food_CHN, col = "blue")
+lines(year, Bovine_Meat_food_CHN, col = "grey" )
+lines(year, Pig_Meat_food_CHN, col = "black")
+lines(year, Poultry_Meat_food_CHN, col = "brown" )
+lines(year, Goat_Meat_food_CHN, col = "green" )
+
+legend(x = "topleft",
+       legend = c("Milk" , "Egg" ,"Fish and Seafood",
+                                     "Animal Fat" , "Bovine Meat",
+                                     "Pig Meat", "Poultry Meat", 
+                                     "Goat Meat"),
+       fill = c("coral", "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+
+ 
+```
+
+Key  observation from the above plot
+- Almost all food items shows increasing trend after 1980. We can assume it's not because of the fondness of any particular item rather its the population growth which leads to the same
+- The consumption of animal fat is almost negligible
+- Amongst various meat items Bovine meat is the least popular where as pig meat is the most popular 
+- After 2000 milk consumption gain popularity amongst Chinese 
+
+## India
+
+```{r}
+
+milk_food_IND = milk[milk$Area.Abbreviation == "IND" 
+                     & milk$Element == "Food",c(11:63) ]
+egg_food_IND = eggs[eggs$Area.Abbreviation == "IND" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_IND = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "IND" & 
+                                       Fish_Seafood$Element == "Food", 
+                                       c(11:63) ]
+Animal_Fat_food_IND = Animal_Fat[Animal_Fat$Area.Abbreviation == "IND" & 
+                                   Animal_Fat$Element == "Food",
+                                   c(11:63) ]
+Bovine_Meat_food_IND = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "IND" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_IND = Pig_Meat[Pig_Meat$Area.Abbreviation == "IND"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_IND = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "IND" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_IND = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "IND" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+
+Goat_Meat_food_IND = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "IND" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, milk_food_IND, typ = "l" , col="coral", 
+     main = "Food consumption trend: India",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 120000))
+lines(year, egg_food_IND, col = "skyblue")
+lines(year, Fish_Seafood_food_IND, col = "aquamarine4" )
+lines(year, Animal_Fat_food_IND, col = "blue")
+lines(year, Bovine_Meat_food_IND, col = "grey" )
+lines(year, Pig_Meat_food_IND, col = "black")
+lines(year, Poultry_Meat_food_IND, col = "brown" )
+lines(year, Goat_Meat_food_IND, col = "green" )
+
+legend(x = "topleft",
+       legend = c("Milk" , "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("coral", "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+
+```
+
+Milk seems to be one of the most popular food items amongst Indian. Also consumption quantity is also significant. Since, rest items' trend is not visible in the above plot let's plot all except milk separately.
+
+Plotting except milk
+
+```{r}
+plot(year, egg_food_IND, typ = "l" , col="coral", 
+     main = "Food consumption trend: India",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 8000))
+lines(year, Fish_Seafood_food_IND, col = "aquamarine4" )
+lines(year, Animal_Fat_food_IND, col = "blue")
+lines(year, Bovine_Meat_food_IND, col = "grey" )
+lines(year, Pig_Meat_food_IND, col = "black")
+lines(year, Poultry_Meat_food_IND, col = "brown" )
+lines(year, Goat_Meat_food_IND, col = "green" )
+
+legend(x = "topleft",
+       legend = c( "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("coral" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+```
+Key observations from the above plot
+- Fish is the most popular source of non-vegetarian food item in India, egg being the second and poultry meat is on the third position 
+- Beef consumption shows a declining pattern after 2000
+
+## USA
+
+```{r}
+
+milk_food_USA = milk[milk$Area.Abbreviation == "USA" 
+                     & milk$Element == "Food",c(11:63) ]
+egg_food_USA = eggs[eggs$Area.Abbreviation == "USA" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_USA = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "USA" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_USA = Animal_Fat[Animal_Fat$Area.Abbreviation == "USA" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_USA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "USA" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_USA = Pig_Meat[Pig_Meat$Area.Abbreviation == "USA"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_USA = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "USA" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, milk_food_USA, typ = "l" , col="coral", 
+     main = "Food consumption trend: USA",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 80000))
+lines(year, egg_food_USA, col = "skyblue")
+lines(year, Fish_Seafood_food_USA, col = "aquamarine4" )
+lines(year, Animal_Fat_food_USA, col = "blue")
+lines(year, Bovine_Meat_food_USA, col = "grey" )
+lines(year, Pig_Meat_food_USA, col = "black")
+lines(year, Poultry_Meat_food_USA, col = "brown" )
+lines(year, Goat_Meat_food_USA, col = "green" )
+
+legend(x = "topleft", cex = 0.6,
+       legend = c("Milk" , "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("coral", "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+```
+Like India's trend here also due to milk rest all trend are not clear. 
+
+Let's try to plot all but milk for clarity 
+
+```{r}
+egg_food_USA = eggs[eggs$Area.Abbreviation == "USA" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_USA = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "USA" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_USA = Animal_Fat[Animal_Fat$Area.Abbreviation == "USA" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_USA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "USA" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_USA = Pig_Meat[Pig_Meat$Area.Abbreviation == "USA"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_USA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "USA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_USA = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "USA" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, egg_food_USA, typ = "l" , col="skyblue", 
+     main = "Food consumption trend: USA",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 20000))
+lines(year, Fish_Seafood_food_USA, col = "aquamarine4" )
+lines(year, Animal_Fat_food_USA, col = "blue")
+lines(year, Bovine_Meat_food_USA, col = "grey" )
+lines(year, Pig_Meat_food_USA, col = "black")
+lines(year, Poultry_Meat_food_USA, col = "brown" )
+lines(year, Goat_Meat_food_USA, col = "green" )
+
+legend(x = "topleft", cex = 0.6,
+       legend = c( "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c( "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+
+```
+Key observations from the above plot
+- Poultry meat is the most popular meat amongst Americans and rate of consumption per year is also increasing 
+- Bovine meat till 1990 was the most consumed meat and now it's second best preference 
+- Goat meat is the least popular meat 
+
+
+## Brazil
+
+```{r}
+
+milk_food_BRA = milk[milk$Area.Abbreviation == "BRA" 
+                     & milk$Element == "Food",c(11:63) ]
+egg_food_BRA = eggs[eggs$Area.Abbreviation == "BRA" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_BRA = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "BRA" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_BRA = Animal_Fat[Animal_Fat$Area.Abbreviation == "BRA" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_BRA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "BRA" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_BRA = Pig_Meat[Pig_Meat$Area.Abbreviation == "BRA"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_BRA = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "BRA" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, milk_food_BRA, typ = "l" , col="coral", 
+     main = "Food consumption trend: Brazil",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 30000))
+lines(year, egg_food_BRA, col = "skyblue")
+lines(year, Fish_Seafood_food_BRA, col = "aquamarine4" )
+lines(year, Animal_Fat_food_BRA, col = "blue")
+lines(year, Bovine_Meat_food_BRA, col = "grey" )
+lines(year, Pig_Meat_food_BRA, col = "black")
+lines(year, Poultry_Meat_food_BRA, col = "brown" )
+lines(year, Goat_Meat_food_BRA, col = "green" )
+
+legend(x = "topleft",
+       legend = c("Milk" , "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("coral", "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+```
+Like India and USA here also rest all trend are not clear due to milk 
+
+Let's try to plot all but milk for clarity 
+
+```{r}
+egg_food_BRA = eggs[eggs$Area.Abbreviation == "BRA" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_BRA = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "BRA" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_BRA = Animal_Fat[Animal_Fat$Area.Abbreviation == "BRA" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_BRA = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "BRA" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_BRA = Pig_Meat[Pig_Meat$Area.Abbreviation == "BRA"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_BRA = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "BRA" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_BRA = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "BRA" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, egg_food_BRA, typ = "l" , col="skyblue", 
+     main = "Food consumption trend: Brazil",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" , ylim = c(0, 10000))
+
+lines(year, Fish_Seafood_food_BRA, col = "aquamarine4" )
+lines(year, Animal_Fat_food_BRA, col = "blue")
+lines(year, Bovine_Meat_food_BRA, col = "grey" )
+lines(year, Pig_Meat_food_BRA, col = "black")
+lines(year, Poultry_Meat_food_BRA, col = "brown" )
+lines(year, Goat_Meat_food_BRA, col = "green" )
+
+legend(x = "topleft",
+       legend = c( "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+```
+Key Observations
+
+- Bovine as well as poultry meat are two major preference amongst people of Brazil
+- Goat meat is the least popular
+
+## Russia 
+
+```{r}
+
+milk_food_RUS = milk[milk$Area.Abbreviation == "RUS" 
+                     & milk$Element == "Food",c(11:63) ]
+egg_food_RUS = eggs[eggs$Area.Abbreviation == "RUS" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_RUS = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "RUS" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_RUS = Animal_Fat[Animal_Fat$Area.Abbreviation == "RUS" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_RUS = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "RUS" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_RUS = Pig_Meat[Pig_Meat$Area.Abbreviation == "RUS"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_RUS = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "RUS" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, milk_food_RUS, typ = "l" , col="coral", 
+     main = "Food consumption trend: Russia",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" ,
+     xlim = c(1990, 2013),  ylim = c(0, 30000))
+lines(year, egg_food_RUS, col = "skyblue")
+lines(year, Fish_Seafood_food_RUS, col = "aquamarine4" )
+lines(year, Animal_Fat_food_RUS, col = "blue")
+lines(year, Bovine_Meat_food_RUS, col = "grey" )
+lines(year, Pig_Meat_food_RUS, col = "black")
+lines(year, Poultry_Meat_food_RUS, col = "brown" )
+lines(year, Goat_Meat_food_RUS, col = "green" )
+
+legend(x = "topleft", cex = 0.6,
+       legend = c("Milk" , "Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("coral", "skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+
+
+```
+Similarly, here also rest all trend are not clear due to milk 
+
+Let's try to plot all but milk for clarity 
+
+```{r}
+egg_food_RUS = eggs[eggs$Area.Abbreviation == "RUS" & eggs$Element == "Food" 
+                    , c(11:63) ]
+Fish_Seafood_food_RUS = Fish_Seafood[Fish_Seafood$Area.Abbreviation == "RUS" & 
+                                       Fish_Seafood$Element == "Food", 
+                                     c(11:63) ]
+Animal_Fat_food_RUS = Animal_Fat[Animal_Fat$Area.Abbreviation == "RUS" & 
+                                   Animal_Fat$Element == "Food",
+                                 c(11:63) ]
+Bovine_Meat_food_RUS = Bovine_Meat[Bovine_Meat$Area.Abbreviation == "RUS" 
+                                   & Bovine_Meat$Element == "Food", 
+                                   c(11:63) ]
+Pig_Meat_food_RUS = Pig_Meat[Pig_Meat$Area.Abbreviation == "RUS"
+                             & Pig_Meat$Element == "Food" ,
+                             c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Poultry_Meat_food_RUS = Poultry_Meat[Poultry_Meat$Area.Abbreviation == "RUS" 
+                                     & Poultry_Meat$Element == "Food", 
+                                     c(11:63) ]
+Goat_Meat_food_RUS = 
+  Goat_Meat[Goat_Meat$Area.Abbreviation == "RUS" 
+                      & Goat_Meat$Element == "Food", 
+                      c(11:63) ]
+
+plot(year, egg_food_RUS, typ = "l" , col="skyblue", 
+     main = "Food consumption trend: Russia",
+     xlab = "Year", ylab = "Amount(1000 tonnes)" ,
+     xlim = c(1990, 2013),  ylim = c(0, 6000))
+
+lines(year, Fish_Seafood_food_RUS, col = "aquamarine4" )
+lines(year, Animal_Fat_food_RUS, col = "blue")
+lines(year, Bovine_Meat_food_RUS, col = "grey" )
+lines(year, Pig_Meat_food_RUS, col = "black")
+lines(year, Poultry_Meat_food_RUS, col = "brown" )
+lines(year, Goat_Meat_food_RUS, col = "green" )
+
+legend(x = "topleft", cex = 0.5,
+       legend = c("Egg" ,"Fish and Seafood",
+                  "Animal Fat" , "Bovine Meat",
+                  "Pig Meat", "Poultry Meat", 
+                  "Goat Meat"),
+       fill = c("skyblue" , "aquamarine4" ,
+                "blue", "grey", "black", "brown","green"))
+
+```
+
+Key Observation from the above plot
+
+- Milk is consumed in larger amount than meat in Russia, like India
+- consumption of all kind of item are stagnant throughout the years depicting no major increase or decrease in  population
+- Fish, poultry and pig meat, all the are liked almost equally by Russians
+- Consumption of animal fat is showing a declining trend
+
+# Conclusion 
+
+To answer the question of feeding to such a huge and constantly growing population we first dived into the food  distribution pattern for different country across the globe. It was really interesting to find out that  China, India, USA, Brazil and Russia are the top 5 food consuming countries. Also, out of the 8 food items China leads in 5 of them, India leads in 2 and USA in 1. One may find summary of top five nation for each food item in the table below. 
+
+```{r}
+library(knitr)
+knitr::kable(top_5_consumer ,
+             caption = "Top 5 Food Items consuming country")
+```
+Interestingly, rate of increase of pig meat consumption has gained a much faster rate in China after 1980 and becomes almost 6 times of that consumed in USA, the second highest consumer. Similarly the popularity of Bovine meat in USA can be assumed from the fact that even after having 4 times lesser population than China it consumes 1.3 times more meat than that of China, which is the second highest consumer. 
+
+

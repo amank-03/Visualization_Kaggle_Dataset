@@ -1,0 +1,191 @@
+---
+title: "Who Eats the Food We Grow?"
+author: "Aman Kumar | CMI"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract 
+
+The project aims to find solution for feeding the growing population of the world. The world population is expected to grow from 7.3 billion today to 9.7 billion in the year 2050 and one of the greatest challenge for food and agriculture organisations is to feed such a huge population.
+
+These solutions range from changing the way we grow our food to changing the way we eat. To make things harder, the world's climate is changing and it is both affecting and affected by the way we grow our food – agriculture.
+
+For instance, Cow is well know methane gas giant. Methane, the $2^{nd}$ most warming gas after $CO_2$, and a particularly potent greenhouse gas contributing to global warming. As per CBS news article on "How much methane cows releases when burping and passing gas" released on Oct 20, 2021, cows are responsible for about 40% of global methane emission which is passed or belched by the world's 1.4 billion cattle. However, the bovine meat(beef) is a major red meat source around the glove. As per the data since 1961 to 2013 an average of 44,408,870 tonnes of beef is consumed each year around the globe. Considering  average weight of a cow as 1000 kilograms leads us to production and slaughtering of 44,408,870 livestock per year. 
+
+
+
+# Dataset Description
+
+This dataset was meticulously gathered, organized and published by the Food and Agriculture Organization of the United Nations. This chunk of the dataset is focused on two utilization of each food item available:
+
+Food - refers to the total amount of the food item available as human food
+Feed - refers to the quantity of the food item available for feeding to the livestock and poultry
+during the reference period.  
+
+```{r, echo=FALSE}
+Variable = c("Area Abbreviation" , "Area Code" , "Area" , "Item Code" ,
+             "Item" , "Element code" , "Element" , "Unit" , "Latitude" , "Longitude",
+             "Year" , "Amount")
+
+Type_of_variable = c("Nominal" , "Nominal" , "Nominal" , "Nominal" , "Nominal",
+                     "Nominal" , "Nominal" , "Nominal" , "Continuous", "Continuous", 
+                     "Ordinal" , "Count")
+
+Description = c("Abbreviation for country name",
+                "Unique code for each country" , 
+                "Name of the Country" , 
+                " Food item code" , 
+                "Food Item"," Food or Feed code", "Food or Feed",
+                "Unit of Measurement" , 
+                "Latitude", "Longitude", "Year since 1961 to 2013" ,
+                "Amount of Food or Feed for each year")
+
+df = data.frame(Variable, Type_of_variable ,Description )
+library(knitr)
+knitr::kable(df,
+             caption = "Variable Description")
+```
+\newpage
+
+# Methods
+
+## Selection of data
+
+As a part of study I have considered 4 out of top 10 most popular food items across the globe viz; Milk-Excluding Butter, Eggs, Fish and Seafood, Animal Fat
+
+In addition, I have also considered below 4 items viz; Bovine meat, Pig meat, Poultry Meat, Goat Meat
+
+## Finding Top 20 consumers 
+
+Visualization of top 20 consumers of each food item has been done in order to have insights of the consumption distribution.
+
+![Top Consumer](Top_20.png)
+
+## Finding Consumption Pattern 
+
+Consumption Pattern for the top 5 consumer for each food item has been plotted.
+
+```{r, out.width="80%", echo=FALSE}
+include_graphics("Consumption_Pattern.png")
+```
+
+## Finding Top consumer country 
+
+Top 5 consumer country for all 8 items has been ranked. Below table is the exhaustive list of top 5 consumers for all the items and from the table one may conclude that China, India, USA, Brazil and Russia dominate food market for these 8 items.  
+
+```{r, echo=FALSE}
+# Data Processing 
+data = read.csv("C:\\Users\\AMAN-PC\\Documents\\VISU Project\\FAO.csv", header = T)
+
+
+milk_2013_food = data[data$Item.Code == "2848" & data$Element=="Food" , 
+                      c(1, 7, 63) ]
+top_consumer_milk_food = head(milk_2013_food[order(milk_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+
+eggs = data[data$Item == "Eggs" & data$Item.Code == "2744", ]
+eggs_2013_food = eggs[eggs$Element == "Food", c(1, 63)]
+top_consumer_eggs_food = head(eggs_2013_food[order(eggs_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+
+Fish_Seafood= data[data$Item == "Fish, Seafood" & data$Item.Code == "2960", ]
+Fish_Seafood_2013_food = Fish_Seafood[Fish_Seafood$Element == "Food", c(1, 63)]
+top_consumer_Fish_Seafood_food = head(Fish_Seafood_2013_food[order(Fish_Seafood_2013_food$Y2013, decreasing = T), ],20)
+
+Animal_Fat = data[data$Item == "Animal fats" & data$Item.Code == "2946", ]
+
+Animal_Fat_2013_food = Animal_Fat[Animal_Fat$Element == "Food", c(1, 63)]
+top_consumer_Animal_Fat_food = head(Animal_Fat_2013_food
+                                    [order(Animal_Fat_2013_food$Y2013, 
+                                           decreasing = T), ],20)
+
+Bovine_Meat = data[data$Item == "Bovine Meat" & data$Item.Code == "2731", ]
+Bovine_Meat_2013_food = Bovine_Meat[Bovine_Meat$Element == "Food", c(1, 63)]
+top_consumer_Bovine_Meat_food = head(Bovine_Meat_2013_food
+                                     [order(Bovine_Meat_2013_food$Y2013, 
+                                            decreasing = T), ],20)
+
+Pig_Meat = data[data$Item == "Pigmeat" & data$Item.Code == "2733", ]
+Pig_Meat_2013_food = Pig_Meat[Pig_Meat$Element == "Food", c(1, 63)]
+top_consumer_Pig_Meat_food = head(Pig_Meat_2013_food
+                                  [order(Pig_Meat_2013_food$Y2013, 
+                                         decreasing = T), ],20)
+
+Poultry_Meat = data[data$Item == "Poultry Meat" & data$Item.Code == "2734", ]
+Poultry_Meat_2013_food = Poultry_Meat[Poultry_Meat$Element == "Food", c(1, 63)]
+top_consumer_Poultry_Meat_food = head(Poultry_Meat_2013_food
+                                      [order(Poultry_Meat_2013_food$Y2013, 
+                                             decreasing = T), ],20)
+
+Goat_Meat = data[data$Item == "Mutton & Goat Meat" & data$Item.Code == "2732", ]
+Goat_Meat_2013_food = Goat_Meat[Goat_Meat$Element == "Food", 
+                                                    c(1, 63)]
+top_consumer_Goat_Meat_food =head(Goat_Meat_2013_food
+                                            [order(Goat_Meat_2013_food$Y2013, 
+                                                   decreasing = T), ],20)
+
+
+t5_milk = head(top_consumer_milk_food[,1],5)
+t5_egg = head(top_consumer_eggs_food[,1],5)
+t5_fish_seafood = head(top_consumer_Fish_Seafood_food[,1],5)
+t5_animal_fat = head(top_consumer_Animal_Fat_food[,1],5)
+t5_bovine_meat = head(top_consumer_Bovine_Meat_food[,1],5)
+t5_pig_meat = head(top_consumer_Pig_Meat_food[,1],5)
+t5_poultry_meat = head(top_consumer_Poultry_Meat_food[,1],5)
+t5_goat_meat = head(top_consumer_Goat_Meat_food[,1],5)
+
+top_5_consumer = t(data.frame(MILK =t5_milk, 
+                             EGG = (t5_egg), 
+                             FISH = (t5_fish_seafood),
+                         ANIMAL_FAT = (t5_animal_fat), 
+                        BOVINE_MEAT = (t5_bovine_meat),
+                        PIG_MEAT = (t5_pig_meat), 
+                        POULTRY_MEAT = (t5_poultry_meat),
+                        GOAT_MAET =  (t5_goat_meat)))
+
+colnames(top_5_consumer) = c("1st", "2nd", "3rd", "4th", "5th") 
+
+library(knitr)
+knitr::kable(top_5_consumer ,
+             caption = "Top 5 Food Items consuming country")
+```
+
+Since, China, India, USA, Brazil and Russia dominate food market for these 8 items. For further analysis consumption pattern of all the food item(expect milk) has been plotted in one frame for comparison, for each country.  
+
+```{r, out.width="80%", echo=FALSE}
+include_graphics("Food_consumption_China.png")
+```
+Below is the analysis on the same for China (Highest consumer amongst all): 
+- Almost all food items shows increasing trend after 1980. We can assume it’s not because of the      fondness of any particular item rather its the population growth which leads to the same  
+- The consumption of animal fat is almost negligible  
+- Amongst various meat items Bovine meat is the least popular where as pig meat is the most popular   
+-  After 2000 milk consumption gain popularity in China  
+\newpage
+
+# Conclusion 
+
+It was really interesting to find out that  China, India, USA, Brazil and Russia are the top 5 food consuming countries. Also, out of the 8 food items China leads in 5 of them, India leads in 2 and USA in 1. One may find summary of top five nation for each food item in the table 2 shown above.
+
+# Rshiny 
+
+To make visualization easy I have also develop an Analytics dashboard using R-Shiny. [**Click here**](https://amank.shinyapps.io/VISU_Proj_comp_2/?_ga=2.61108332.1714039681.1641722388-1351365873.1637559667) to access the application. The application  can be used to extract top 20 consumers for each of the item  and the trend of each item (from Y1961 to Y2013) in any particular country.
+ 
+# Tableau Dashboard 
+
+Further I have also develop more exhaustive dashboard using Tableau. Here one can view consumption distribution, Ranking based on consumption, Consumption trend beased on food items and based on country. [**Click Here**](https://public.tableau.com/app/profile/aman.kumar8841/viz/Who_Eats_the_Food_We_Grow/Dashboard) to view the same.
+
+![Tableau Dashboard](Tableau_Dashboard.png)
+
+
+
+
+PS: *I have also made a presentation describing the project work and dashboard in details. The video is available on YouTube.* [**Click here**](https://www.youtube.com/watch?v=wNM4k6lVKOA) to view the video.
+
+#  References
+
+1. Kaggle Project link [https://www.kaggle.com/dorbicycle/world-foodfeed-production/code]  
+ 
